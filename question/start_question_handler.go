@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/spf13/viper"
 	"github.com/susinl/coolkids-trivia-game/util"
 	"go.uber.org/zap"
 )
@@ -12,14 +13,16 @@ type startQuestion struct {
 	Logger                                   *zap.Logger
 	QueryParticipantByCodeFn                 QueryParticipantByCodeFn
 	QueryQuestionByStatusFn                  QueryQuestionByStatusFn
+	QueryCountTotalWinnerFn                  QueryCountTotalWinnerFn
 	UpdateQuestionStatusAndParticipantInfoFn UpdateQuestionStatusAndParticipantInfoFn
 }
 
-func NewStartQuestion(logger *zap.Logger, queryParticipantByCodeFn QueryParticipantByCodeFn, queryQuestionByStatusFn QueryQuestionByStatusFn, updateQuestionStatusAndParticipantInfoFn UpdateQuestionStatusAndParticipantInfoFn) http.Handler {
+func NewStartQuestion(logger *zap.Logger, queryParticipantByCodeFn QueryParticipantByCodeFn, queryQuestionByStatusFn QueryQuestionByStatusFn, queryCountTotalWinnerFn QueryCountTotalWinnerFn, updateQuestionStatusAndParticipantInfoFn UpdateQuestionStatusAndParticipantInfoFn) http.Handler {
 	return &startQuestion{
 		Logger:                                   logger,
 		QueryParticipantByCodeFn:                 queryParticipantByCodeFn,
 		QueryQuestionByStatusFn:                  queryQuestionByStatusFn,
+		QueryCountTotalWinnerFn:                  queryCountTotalWinnerFn,
 		UpdateQuestionStatusAndParticipantInfoFn: updateQuestionStatusAndParticipantInfoFn,
 	}
 }
@@ -67,6 +70,16 @@ func (s *startQuestion) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	totalWinner, err := s.QueryCountTotalWinnerFn(r.Context())
+	if err != nil {
+		s.Logger.Error(err.Error(), zap.String("code", code))
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+
 	question, err := s.QueryQuestionByStatusFn(r.Context(), util.ReadyStatus)
 	if err != nil {
 		s.Logger.Error(err.Error(), zap.String("code", code))
@@ -87,7 +100,8 @@ func (s *startQuestion) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := s.UpdateQuestionStatusAndParticipantInfoFn(r.Context(), code, req.Name, req.Email, req.PhoneNumber, *question.Id); err != nil {
+	byPass := totalWinner >= viper.GetInt("question.quota")
+	if err := s.UpdateQuestionStatusAndParticipantInfoFn(r.Context(), code, req.Name, req.Email, req.PhoneNumber, *question.Id, byPass); err != nil {
 		s.Logger.Error(err.Error(), zap.String("code", code))
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{
@@ -98,19 +112,24 @@ func (s *startQuestion) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	s.Logger.Debug("participant",
 		zap.String("code", code),
-		zap.String("name", *participant.Name),
-		zap.String("phone", *participant.PhoneNumber),
 		zap.Int("question id", *question.Id),
+		zap.Bool("by pass", byPass),
 	)
 
-	resp := StartQuestionResponse{
-		QuestionText: *question.QuestionText,
-		ChoiceA:      *question.ChoiceA,
-		ChoiceB:      *question.ChoiceB,
-		ChoiceC:      *question.ChoiceC,
-		ChoiceD:      *question.ChoiceD,
-		ChoiceE:      *question.ChoiceE,
-		ChoiceF:      *question.ChoiceF,
+	var resp StartQuestionResponse
+	if !byPass {
+		resp = StartQuestionResponse{
+			IsAvailable: true,
+			Data: &QuestionData{
+				QuestionText: *question.QuestionText,
+				ChoiceA:      *question.ChoiceA,
+				ChoiceB:      *question.ChoiceB,
+				ChoiceC:      *question.ChoiceC,
+				ChoiceD:      *question.ChoiceD,
+				ChoiceE:      *question.ChoiceE,
+				ChoiceF:      *question.ChoiceF,
+			},
+		}
 	}
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]interface{}{

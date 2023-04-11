@@ -4,19 +4,22 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
 type submitAnswer struct {
 	Logger                             *zap.Logger
 	QueryParticipantAndAnswerFn        QueryParticipantAndAnswerFn
+	QueryCountTotalWinnerFn            QueryCountTotalWinnerFn
 	UpdateParticipantAnswerAndStatusFn UpdateParticipantAnswerAndStatusFn
 }
 
-func NewSubmitAnswer(logger *zap.Logger, queryParticipantAndAnswerFn QueryParticipantAndAnswerFn, updateParticipantAnswerAndStatusFn UpdateParticipantAnswerAndStatusFn) *submitAnswer {
+func NewSubmitAnswer(logger *zap.Logger, queryParticipantAndAnswerFn QueryParticipantAndAnswerFn, queryCountTotalWinnerFn QueryCountTotalWinnerFn, updateParticipantAnswerAndStatusFn UpdateParticipantAnswerAndStatusFn) *submitAnswer {
 	return &submitAnswer{
 		Logger:                             logger,
 		QueryParticipantAndAnswerFn:        queryParticipantAndAnswerFn,
+		QueryCountTotalWinnerFn:            queryCountTotalWinnerFn,
 		UpdateParticipantAnswerAndStatusFn: updateParticipantAnswerAndStatusFn,
 	}
 }
@@ -39,6 +42,16 @@ func (s *submitAnswer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := req.validate(); err != nil {
 		s.Logger.Error(err.Error(), zap.String("code", code))
 		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	totalWinner, err := s.QueryCountTotalWinnerFn(r.Context())
+	if err != nil {
+		s.Logger.Error(err.Error(), zap.String("code", code))
+		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{
 			"error": err.Error(),
 		})
@@ -82,7 +95,12 @@ func (s *submitAnswer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		status = "used"
 	}
 
-	if err := s.UpdateParticipantAnswerAndStatusFn(r.Context(), code, req.Answer, *participantWAnswer.QuestionId, status); err != nil {
+	byPass := totalWinner >= viper.GetInt("question.quota")
+	answer := req.Answer
+	if byPass {
+		answer = 0
+	}
+	if err := s.UpdateParticipantAnswerAndStatusFn(r.Context(), code, answer, *participantWAnswer.QuestionId, status); err != nil {
 		s.Logger.Error(err.Error(), zap.String("code", code))
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{
@@ -96,6 +114,7 @@ func (s *submitAnswer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		zap.Int("answer", req.Answer),
 		zap.Int("correct answer", *participantWAnswer.CorrectAnswer),
 		zap.String("question status", status),
+		zap.Bool("by pass", byPass),
 	)
 
 	w.WriteHeader(http.StatusOK)

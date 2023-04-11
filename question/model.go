@@ -31,6 +31,11 @@ func (req *StartQuestionRequest) validate() error {
 }
 
 type StartQuestionResponse struct {
+	IsAvailable bool          `json:"isAvailable" example:"true"`
+	Data        *QuestionData `json:"data,omitempty"`
+}
+
+type QuestionData struct {
 	QuestionText string `json:"questionText" example:"What"`
 	ChoiceA      string `json:"choiceA" example:"1"`
 	ChoiceB      string `json:"choiceB" example:"2"`

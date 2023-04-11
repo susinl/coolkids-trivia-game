@@ -25,4 +25,4 @@ func (m *middleware) JsonMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func (m *middleware) ValidateJWT()
+// func (m *middleware) ValidateJWT()

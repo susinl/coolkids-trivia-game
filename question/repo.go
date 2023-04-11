@@ -3,11 +3,31 @@ package question
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/susinl/coolkids-trivia-game/util"
 )
+
+type QueryCountTotalWinnerFn func(ctx context.Context) (int, error)
+
+func NewQueryCountTotalWinnerFn(db *sql.DB) QueryCountTotalWinnerFn {
+	return func(ctx context.Context) (int, error) {
+		var count int
+		err := db.QueryRowContext(ctx, `
+			SELECT	COUNT(*) AS total_winner
+			FROM db.participant x
+			LEFT JOIN db.question y ON x.question_id = y.id
+			WHERE x.answer = y.correct_answer
+		;`).Scan(&count)
+		if err != nil {
+			return 0, err
+		}
+		fmt.Println(count)
+		return count, nil
+	}
+}
 
 type QueryParticipantByCodeFn func(ctx context.Context, code string) (*Participant, error)
 
@@ -85,39 +105,41 @@ func NewQueryQuestionByStatusFn(db *sql.DB) QueryQuestionByStatusFn {
 	}
 }
 
-type UpdateQuestionStatusAndParticipantInfoFn func(ctx context.Context, code string, name string, email string, phone string, id int) error
+type UpdateQuestionStatusAndParticipantInfoFn func(ctx context.Context, code string, name string, email string, phone string, id int, byPass bool) error
 
 func NewUpdateQuestionStatusAndParticipantInfoFn(db *sql.DB) UpdateQuestionStatusAndParticipantInfoFn {
-	return func(ctx context.Context, code string, name string, email string, phone string, id int) error {
+	return func(ctx context.Context, code string, name string, email string, phone string, id int, byPass bool) error {
 		tx, err := db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
 		if err != nil {
 			return err
 		}
 
-		resultQ, err := tx.ExecContext(ctx, `
-			UPDATE db.question
-			SET	status = 'pending'
-			WHERE id = ?
-		;`, id)
-		if err != nil {
-			if rollbackErr := tx.Rollback(); rollbackErr != nil {
-				return errors.Wrap(err, rollbackErr.Error())
+		if !byPass {
+			resultQ, err := tx.ExecContext(ctx, `
+				UPDATE db.question
+				SET	status = 'pending'
+				WHERE id = ?
+			;`, id)
+			if err != nil {
+				if rollbackErr := tx.Rollback(); rollbackErr != nil {
+					return errors.Wrap(err, rollbackErr.Error())
+				}
+				return err
 			}
-			return err
-		}
-		rowQ, err := resultQ.RowsAffected()
-		if err != nil {
-			if rollbackErr := tx.Rollback(); rollbackErr != nil {
-				return errors.Wrap(err, rollbackErr.Error())
+			rowQ, err := resultQ.RowsAffected()
+			if err != nil {
+				if rollbackErr := tx.Rollback(); rollbackErr != nil {
+					return errors.Wrap(err, rollbackErr.Error())
+				}
+				return err
 			}
-			return err
-		}
-		if rowQ != 1 {
-			err := errors.Errorf("Expected to affect 1 row but got affected %d row", rowQ)
-			if rollbackErr := tx.Rollback(); rollbackErr != nil {
-				return errors.Wrap(err, rollbackErr.Error())
+			if rowQ != 1 {
+				err := errors.Errorf("Expected to affect 1 row but got affected %d row", rowQ)
+				if rollbackErr := tx.Rollback(); rollbackErr != nil {
+					return errors.Wrap(err, rollbackErr.Error())
+				}
+				return err
 			}
-			return err
 		}
 
 		resultP, err := tx.ExecContext(ctx, `

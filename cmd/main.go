@@ -55,6 +55,7 @@ func initViper() {
 	viper.SetDefault("mysql.timeout", 100)
 
 	viper.SetDefault("question.timeout", "20s")
+	viper.SetDefault("question.quota", 10)
 
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
@@ -91,12 +92,14 @@ func main() {
 		logger,
 		question.NewQueryParticipantByCodeFn(db),
 		question.NewQueryQuestionByStatusFn(db),
+		question.NewQueryCountTotalWinnerFn(db),
 		question.NewUpdateQuestionStatusAndParticipantInfoFn(db),
 	)).Methods(http.MethodPost)
 
 	mux.Handle("/submit", question.NewSubmitAnswer(
 		logger,
 		question.NewQueryParticipantAndAnswerFn(db),
+		question.NewQueryCountTotalWinnerFn(db),
 		question.NewUpdateParticipantAnswerAndStatusFn(db),
 	)).Methods(http.MethodPost)
 
