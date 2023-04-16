@@ -22,6 +22,7 @@ import (
 	"github.com/susinl/coolkids-trivia-game/logz"
 	"github.com/susinl/coolkids-trivia-game/middleware"
 	"github.com/susinl/coolkids-trivia-game/question"
+	"github.com/susinl/coolkids-trivia-game/winners"
 
 	"github.com/spf13/viper"
 )
@@ -90,6 +91,11 @@ func main() {
 
 	mux := route.PathPrefix(viper.GetString("app.context")).Subrouter()
 	mux.Use(middle.JsonMiddleware)
+
+	mux.Handle("/get-winner", winners.NewgetWinnersHandler(
+		logger,
+		winners.NewQueryWinnerListFn(db),
+	)).Methods(http.MethodGet)
 
 	mux.Handle("/check-status/{code}", middleware.NewMiddleware(logger).JsonMiddleware(middleware.NewMiddleware(logger).ValidateJWT(gameCode.NewCheckStatusHandler(
 		logger,
