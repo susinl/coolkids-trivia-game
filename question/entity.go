@@ -6,7 +6,7 @@ type Participant struct {
 	Email          *string `json:"email" db:"email"`
 	PhoneNumber    *string `json:"phoneNumber" db:"phone_number"`
 	QuestionId     *int    `json:"questionId" db:"question_id"`
-	Answer         *string `json:"answer" db:"answer"`
+	Answer         *int    `json:"answer" db:"answer"`
 	RegisteredTime *string `json:"registeredTime" db:"registered_time"`
 }
 
@@ -25,7 +25,7 @@ type Question struct {
 
 type ParticipantWAnswer struct {
 	QuestionId     *int    `json:"questionId" db:"question_id"`
-	Answer         *string `json:"answer" db:"answer"`
+	Answer         *int    `json:"answer" db:"answer"`
 	CorrectAnswer  *int    `json:"correctAnswer" db:"correct_answer"`
 	RegisteredTime *string `json:"registeredTime" db:"registered_time"`
 }

@@ -18,6 +18,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/rs/cors"
 	"github.com/susinl/coolkids-trivia-game/database"
+	gameCode "github.com/susinl/coolkids-trivia-game/game_code"
 	"github.com/susinl/coolkids-trivia-game/logz"
 	"github.com/susinl/coolkids-trivia-game/middleware"
 	"github.com/susinl/coolkids-trivia-game/question"
@@ -57,6 +58,8 @@ func initViper() {
 	viper.SetDefault("question.timeout", "20s")
 	viper.SetDefault("question.quota", 10)
 
+	viper.SetDefault("jwt.secret", "CoolKidsSecret")
+
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 }
@@ -87,6 +90,16 @@ func main() {
 
 	mux := route.PathPrefix(viper.GetString("app.context")).Subrouter()
 	mux.Use(middle.JsonMiddleware)
+
+	mux.Handle("/check-status/{code}", middleware.NewMiddleware(logger).JsonMiddleware(middleware.NewMiddleware(logger).ValidateJWT(gameCode.NewCheckStatusHandler(
+		logger,
+		gameCode.NewQueryCheckStatusFn(db),
+	)))).Methods(http.MethodGet)
+
+	mux.Handle("/generate-jwt", gameCode.NewValidateGameCode(
+		logger,
+		gameCode.NewQueryParticipantByCodeFn(db),
+	)).Methods(http.MethodPost)
 
 	mux.Handle("/start", question.NewStartQuestion(
 		logger,
