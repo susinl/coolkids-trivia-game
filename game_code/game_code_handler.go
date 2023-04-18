@@ -21,11 +21,11 @@ func NewValidateGameCode(logger *zap.Logger, queryValidateGameCodeFn QueryValida
 }
 
 func (s *validateGameCode) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	code := "I1o9Wp"
+	// code := "I1o9Wp"
 
 	var req ValidateGameCodeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		s.Logger.Error(err.Error(), zap.String("code", code))
+		s.Logger.Error(err.Error(), zap.String("code", req.Code))
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{
 			"error": err.Error(),
@@ -35,7 +35,7 @@ func (s *validateGameCode) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	if err := req.validate(); err != nil {
-		s.Logger.Error(err.Error(), zap.String("code", code))
+		s.Logger.Error(err.Error(), zap.String("code", req.Code))
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{
 			"error": err.Error(),
@@ -43,9 +43,9 @@ func (s *validateGameCode) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	count, err := s.QueryValidateGameCodeFn(r.Context(), code)
+	count, err := s.QueryValidateGameCodeFn(r.Context(), req.Code)
 	if err != nil {
-		s.Logger.Error(err.Error(), zap.String("code", code))
+		s.Logger.Error(err.Error(), zap.String("code", req.Code))
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{
 			"error": err.Error(),
@@ -58,6 +58,7 @@ func (s *validateGameCode) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{
 			"error": "code is invalid",
 		})
+		return
 	}
 
 	if count > 1 {
@@ -65,11 +66,12 @@ func (s *validateGameCode) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{
 			"error": "code has duplicates in db",
 		})
+		return
 	}
 
-	token, err := token.CreateToken(code)
+	token, err := token.CreateToken(req.Code)
 	if err != nil {
-		s.Logger.Error(err.Error(), zap.String("code", code))
+		s.Logger.Error(err.Error(), zap.String("code", req.Code))
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{
 			"error": err.Error(),
@@ -78,7 +80,7 @@ func (s *validateGameCode) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.Logger.Debug("validateGameCode",
-		zap.String("code", code),
+		zap.String("code", req.Code),
 		zap.String("token", token),
 	)
 
@@ -86,7 +88,5 @@ func (s *validateGameCode) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		JwtToken: token,
 	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"data": &resp,
-	})
+	json.NewEncoder(w).Encode(&resp)
 }

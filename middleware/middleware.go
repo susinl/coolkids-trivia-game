@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
 	"github.com/susinl/coolkids-trivia-game/util"
 	"go.uber.org/zap"
@@ -34,7 +35,10 @@ func (m *middleware) JsonMiddleware(next http.Handler) http.Handler {
 
 func (m *middleware) ValidateJWT(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		code := vars["code"]
 		authHeader := r.Header.Get("Authorization")
+
 		if authHeader == "" {
 			w.WriteHeader(http.StatusUnauthorized)
 			json.NewEncoder(w).Encode(map[string]string{
@@ -67,6 +71,24 @@ func (m *middleware) ValidateJWT(next http.Handler) http.Handler {
 		}
 
 		if !token.Valid {
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{
+				"error": "invalid jwt token",
+			})
+			return
+		}
+
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok || !token.Valid {
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{
+				"error": "invalid jwt token",
+			})
+			return
+		}
+
+		codeValue := claims["code"].(string)
+		if codeValue != code {
 			w.WriteHeader(http.StatusUnauthorized)
 			json.NewEncoder(w).Encode(map[string]string{
 				"error": "invalid jwt token",

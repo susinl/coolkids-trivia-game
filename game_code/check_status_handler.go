@@ -56,7 +56,7 @@ func (h *checkStatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			"data": &resp,
 		})
 		return
-	} else if participantAnswerCheck.Answer != participantAnswerCheck.CorrectAnswer {
+	} else if *participantAnswerCheck.Answer != *participantAnswerCheck.CorrectAnswer {
 		// Lose
 		resp = CheckStatusResponse{
 			StatusCode: 2,

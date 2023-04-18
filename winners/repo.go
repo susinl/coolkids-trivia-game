@@ -18,7 +18,7 @@ func NewQueryWinnerListFn(db *sql.DB) QueryWinnerListFn {
 			FROM db.participant p
 			LEFT JOIN db.question q ON p.question_id = q.id
 			WHERE p.answer = q.correct_answer
-			ORDER BY p.registered_tine ASC
+			ORDER BY p.registered_time ASC
 			LIMIT 10
 		;`)
 		if err != nil {
