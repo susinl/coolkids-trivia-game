@@ -15,7 +15,10 @@ require (
 	go.uber.org/zap v1.21.0
 )
 
-require github.com/pkg/errors v0.9.1
+require (
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/pkg/errors v0.9.1
+)
 
 require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
