@@ -6,7 +6,6 @@ type Winners struct {
 
 type Winner struct {
 	FullName    *string `json:"name" db:"name"`
-	Email       *string `json:"email" db:"email"`
 	PhoneNumber *string `json:"phoneNumber" db:"phone_number"`
 	Code        *string `json:"gameCode" db:"game_code"`
 	Timestamp   *string `json:"registeredTime" db:"registered_time"`

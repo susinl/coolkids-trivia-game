@@ -33,7 +33,6 @@ func NewQueryCheckStatusFn(db *sql.DB) QueryCheckStatusFn {
 			SELECT	p.game_code, 
 					p.question_id,
 					p.name,
-					p.email,
 					p.answer,
 					q.correct_answer
 			FROM db.participant p 
@@ -44,7 +43,6 @@ func NewQueryCheckStatusFn(db *sql.DB) QueryCheckStatusFn {
 			&participantAnswer.GameCode,
 			&participantAnswer.QuestionId,
 			&participantAnswer.Name,
-			&participantAnswer.Email,
 			&participantAnswer.Answer,
 			&participantAnswer.CorrectAnswer,
 		)

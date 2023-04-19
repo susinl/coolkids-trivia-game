@@ -101,7 +101,7 @@ func (s *startQuestion) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	byPass := totalWinner >= viper.GetInt("question.quota")
-	if err := s.UpdateQuestionStatusAndParticipantInfoFn(r.Context(), code, req.Name, req.Email, req.PhoneNumber, *question.Id, byPass); err != nil {
+	if err := s.UpdateQuestionStatusAndParticipantInfoFn(r.Context(), code, req.Name, req.PhoneNumber, *question.Id, byPass); err != nil {
 		s.Logger.Error(err.Error(), zap.String("code", code))
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{

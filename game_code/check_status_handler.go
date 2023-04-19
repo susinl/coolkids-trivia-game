@@ -72,7 +72,6 @@ func (h *checkStatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			StatusCode: 1,
 			Data: &CheckStatusData{
 				FullName: *participantAnswerCheck.Name,
-				Email:    *participantAnswerCheck.Email,
 				Code:     *participantAnswerCheck.GameCode,
 			},
 		}

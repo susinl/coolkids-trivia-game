@@ -11,7 +11,6 @@ func NewQueryWinnerListFn(db *sql.DB) QueryWinnerListFn {
 	return func(ctx context.Context) (*Winners, error) {
 		rows, err := db.QueryContext(ctx, `
 			SELECT	p.name,
-					p.email,
 					p.phone_number,
 					p.game_code,
 					p.registered_time
@@ -32,7 +31,6 @@ func NewQueryWinnerListFn(db *sql.DB) QueryWinnerListFn {
 			winner := &Winner{}
 			if err := rows.Scan(
 				&winner.FullName,
-				&winner.Email,
 				&winner.PhoneNumber,
 				&winner.Code,
 				&winner.Timestamp,

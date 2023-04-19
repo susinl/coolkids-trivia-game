@@ -15,7 +15,6 @@ CREATE TABLE `question` (
 CREATE TABLE `participant` (
   `game_code` varchar(255) NOT NULL,
   `name` varchar(255),
-  `email` varchar(255),
   `phone_number` varchar(255),
   `question_id` int,
   `answer` int,

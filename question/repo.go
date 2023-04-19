@@ -37,7 +37,6 @@ func NewQueryParticipantByCodeFn(db *sql.DB) QueryParticipantByCodeFn {
 		err := db.QueryRowContext(ctx, `
 			SELECT	game_code,
 					name,
-					email,
 					phone_number,
 					question_id,
 					answer,
@@ -47,7 +46,6 @@ func NewQueryParticipantByCodeFn(db *sql.DB) QueryParticipantByCodeFn {
 		;`, code).Scan(
 			&participant.GameCode,
 			&participant.Name,
-			&participant.Email,
 			&participant.PhoneNumber,
 			&participant.QuestionId,
 			&participant.Answer,
@@ -105,10 +103,10 @@ func NewQueryQuestionByStatusFn(db *sql.DB) QueryQuestionByStatusFn {
 	}
 }
 
-type UpdateQuestionStatusAndParticipantInfoFn func(ctx context.Context, code string, name string, email string, phone string, id int, byPass bool) error
+type UpdateQuestionStatusAndParticipantInfoFn func(ctx context.Context, code string, name string, phone string, id int, byPass bool) error
 
 func NewUpdateQuestionStatusAndParticipantInfoFn(db *sql.DB) UpdateQuestionStatusAndParticipantInfoFn {
-	return func(ctx context.Context, code string, name string, email string, phone string, id int, byPass bool) error {
+	return func(ctx context.Context, code string, name string, phone string, id int, byPass bool) error {
 		tx, err := db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
 		if err != nil {
 			return err
@@ -145,12 +143,11 @@ func NewUpdateQuestionStatusAndParticipantInfoFn(db *sql.DB) UpdateQuestionStatu
 		resultP, err := tx.ExecContext(ctx, `
 			UPDATE db.participant
 			SET	name = ?,
-				email = ?,
 				phone_number = ?,
 				question_id = ?,
 				registered_time = ?
 			WHERE game_code = ?
-		;`, name, email, phone, id, time.Now().Format(util.DateTimeFormat), code)
+		;`, name, phone, id, time.Now().Format(util.DateTimeFormat), code)
 		if err != nil {
 			if rollbackErr := tx.Rollback(); rollbackErr != nil {
 				return errors.Wrap(err, rollbackErr.Error())

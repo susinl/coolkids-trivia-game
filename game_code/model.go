@@ -33,6 +33,5 @@ type CheckStatusResponse struct {
 
 type CheckStatusData struct {
 	FullName string `json:"fullname" example:"John Doe"`
-	Email    string `json:"email" example:"example@gmail.com"`
 	Code     string `json:"code" example:"123456"`
 }

@@ -10,19 +10,12 @@ import (
 
 type StartQuestionRequest struct {
 	Name        string `json:"name" example:"name"`
-	Email       string `json:"email" example:"email"`
 	PhoneNumber string `json:"phoneNumber" example:"012-345-6789"`
 }
 
 func (req *StartQuestionRequest) validate() error {
 	if utf8.RuneCountInString(req.Name) == 0 {
 		return errors.Wrapf(errors.New(fmt.Sprintf("'name' must be REQUIRED field but the input is '%v'.", req.Name)), util.ValidateFieldError)
-	}
-	if utf8.RuneCountInString(req.Email) == 0 {
-		return errors.Wrapf(errors.New(fmt.Sprintf("'email' must be REQUIRED field but the input is '%v'.", req.Email)), util.ValidateFieldError)
-	}
-	if !util.IsValidEmail(req.Email) {
-		return errors.Wrapf(errors.New(fmt.Sprintf("'email' must be in format but the input is '%v'.", req.Email)), util.ValidateFieldError)
 	}
 	if utf8.RuneCountInString(req.PhoneNumber) == 0 {
 		return errors.Wrapf(errors.New(fmt.Sprintf("'phoneNumber' must be REQUIRED field but the input is '%v'.", req.PhoneNumber)), util.ValidateFieldError)
