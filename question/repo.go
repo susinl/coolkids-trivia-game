@@ -3,7 +3,6 @@ package question
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -24,7 +23,6 @@ func NewQueryCountTotalWinnerFn(db *sql.DB) QueryCountTotalWinnerFn {
 		if err != nil {
 			return 0, err
 		}
-		fmt.Println(count)
 		return count, nil
 	}
 }
@@ -77,9 +75,11 @@ func NewQueryQuestionByStatusFn(db *sql.DB) QueryQuestionByStatusFn {
 					choice_e,
 					choice_f,
 					correct_answer,
-					status
+					status,
+					recent_time
 			FROM db.question
 			WHERE status = ?
+			ORDER BY recent_time ASC
 		;`, status).Scan(
 			&question.Id,
 			&question.QuestionText,
@@ -91,6 +91,7 @@ func NewQueryQuestionByStatusFn(db *sql.DB) QueryQuestionByStatusFn {
 			&question.ChoiceF,
 			&question.CorrectAnswer,
 			&question.Status,
+			&question.RecentTime,
 		)
 		switch {
 		case err == sql.ErrNoRows:
@@ -115,9 +116,10 @@ func NewUpdateQuestionStatusAndParticipantInfoFn(db *sql.DB) UpdateQuestionStatu
 		if !byPass {
 			resultQ, err := tx.ExecContext(ctx, `
 				UPDATE db.question
-				SET	status = 'pending'
+				SET	status = 'pending',
+					recent_time = ?
 				WHERE id = ?
-			;`, id)
+			;`, time.Now().Format(util.DateTimeFormat), id)
 			if err != nil {
 				if rollbackErr := tx.Rollback(); rollbackErr != nil {
 					return errors.Wrap(err, rollbackErr.Error())
@@ -220,9 +222,10 @@ func NewUpdateParticipantAnswerAndStatusFn(db *sql.DB) UpdateParticipantAnswerAn
 
 		resultQ, err := tx.ExecContext(ctx, `
 			UPDATE db.question
-			SET status = ?
+			SET status = ?,
+				recent_time = ?
 			WHERE id = ?
-		;`, status, id)
+		;`, status, time.Now().Format(util.DateTimeFormat), id)
 		if err != nil {
 			if rollbackErr := tx.Rollback(); rollbackErr != nil {
 				return errors.Wrap(err, rollbackErr.Error())

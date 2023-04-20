@@ -3,7 +3,6 @@ package gameCode
 import (
 	"context"
 	"database/sql"
-	"fmt"
 )
 
 type QueryValidateGameCodeFn func(ctx context.Context, code string) (int, error)
@@ -19,7 +18,6 @@ func NewQueryParticipantByCodeFn(db *sql.DB) QueryValidateGameCodeFn {
 		if err != nil {
 			return 0, err
 		}
-		fmt.Println(count)
 		return count, nil
 	}
 }

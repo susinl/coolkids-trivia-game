@@ -3,3 +3,7 @@
 ## mysql
 
 https://rauf-rahman.medium.com/connect-docker-and-mysql-in-right-way-95602f833cb0
+
+```sql
+ALTER USER '<user>'@'%' IDENTIFIED BY '<password>';
+```

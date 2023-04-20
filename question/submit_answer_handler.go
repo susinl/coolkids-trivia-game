@@ -3,8 +3,10 @@ package question
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/spf13/viper"
+	"github.com/susinl/coolkids-trivia-game/util"
 	"go.uber.org/zap"
 )
 
@@ -25,8 +27,8 @@ func NewSubmitAnswer(logger *zap.Logger, queryParticipantAndAnswerFn QueryPartic
 }
 
 func (s *submitAnswer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	code := "I1o9Wp"
-	// now := time.Now()
+	code := r.Context().Value(util.TokenCtxKey).(string)
+	now := time.Now()
 
 	var req SubmitAnswerRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -78,17 +80,16 @@ func (s *submitAnswer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// t, _ := util.ParseDateTime(*participantWAnswer.RegisteredTime)
-	// fmt.Println(now.Sub(t) > viper.GetDuration("question.timeout"), now.Sub(t))
-	// if now.Sub(t) > viper.GetDuration("question.timeout") {
-	// 	err := "game is timeout"
-	// 	s.Logger.Error(err, zap.String("code", code))
-	// 	w.WriteHeader(http.StatusBadRequest)
-	// 	json.NewEncoder(w).Encode(map[string]string{
-	// 		"error": err,
-	// 	})
-	// 	return
-	// }
+	t, _ := util.ParseDateTime(*participantWAnswer.RegisteredTime)
+	if now.Sub(t) > viper.GetDuration("question.timeout") {
+		err := "game is timeout"
+		s.Logger.Error(err, zap.String("code", code))
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err,
+		})
+		return
+	}
 
 	status := "ready"
 	if req.Answer == *participantWAnswer.CorrectAnswer {
