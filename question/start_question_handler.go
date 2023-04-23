@@ -28,7 +28,7 @@ func NewStartQuestion(logger *zap.Logger, queryParticipantByCodeFn QueryParticip
 }
 
 func (s *startQuestion) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	code := "I1o9Wp"
+	code := r.Context().Value(util.TokenCtxKey).(string)
 
 	var req StartQuestionRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

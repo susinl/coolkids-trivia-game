@@ -18,7 +18,6 @@ func NewQueryParticipantByCodeFn(db *sql.DB) QueryValidateCodeFn {
 		if err != nil {
 			return 0, err
 		}
-		// fmt.Println(count)
 		return count, nil
 	}
 }

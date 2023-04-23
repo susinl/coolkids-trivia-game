@@ -20,6 +20,7 @@ type Question struct {
 	ChoiceF       *string `json:"choiceF" db:"choice_f"`
 	CorrectAnswer *int    `json:"correctAnswer" db:"correct_answer"`
 	Status        *string `json:"status" db:"status"`
+	RecentTime    *string `json:"recentTime" db:"recent_time"`
 }
 
 type ParticipantWAnswer struct {

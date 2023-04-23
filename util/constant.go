@@ -10,6 +10,7 @@ const (
 	AccessControl             string = "Access-Control-Allow-Origin"
 	XRequestID                string = "X-Request-ID"
 	BasicAuthenticationHeader string = "WWW-Authenticate"
+	TokenCtxKey               string = "token"
 )
 
 const (

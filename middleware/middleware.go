@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
 	"github.com/susinl/coolkids-trivia-game/util"
 	"go.uber.org/zap"
@@ -35,10 +34,7 @@ func (m *middleware) JsonMiddleware(next http.Handler) http.Handler {
 
 func (m *middleware) ValidateJWT(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		code := vars["code"]
 		authHeader := r.Header.Get("Authorization")
-
 		if authHeader == "" {
 			w.WriteHeader(http.StatusUnauthorized)
 			json.NewEncoder(w).Encode(map[string]string{
@@ -87,17 +83,8 @@ func (m *middleware) ValidateJWT(next http.Handler) http.Handler {
 			return
 		}
 
-		codeValue := claims["code"].(string)
-		if codeValue != code {
-			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": "invalid jwt token",
-			})
-			return
-		}
-
 		// Set the token in the request context
-		ctx := context.WithValue(r.Context(), TokenCtxKey, token)
+		ctx := context.WithValue(r.Context(), TokenCtxKey, claims["code"].(string))
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

@@ -4,11 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gorilla/mux"
+	"github.com/susinl/coolkids-trivia-game/util"
 	"go.uber.org/zap"
 )
-
-const TokenCtxKey = "token"
 
 type checkStatusHandler struct {
 	Logger             *zap.Logger
@@ -23,17 +21,7 @@ func NewCheckStatusHandler(logger *zap.Logger, queryCheckStatusFn QueryCheckStat
 }
 
 func (h *checkStatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	code := vars["code"]
-
-	tokenCtx := r.Context().Value(TokenCtxKey)
-	if tokenCtx == nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{
-			"error": "invalid jwt token",
-		})
-		return
-	}
+	code := r.Context().Value(util.TokenCtxKey).(string)
 
 	participantAnswerCheck, err := h.QueryCheckStatusFn(r.Context(), code)
 	if err != nil {
@@ -54,7 +42,7 @@ func (h *checkStatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(&resp)
 		return
-	} else if *participantAnswerCheck.Answer != *participantAnswerCheck.CorrectAnswer {
+	} else if participantAnswerCheck.Answer == nil || *participantAnswerCheck.Answer != *participantAnswerCheck.CorrectAnswer {
 		// Lose
 		resp = CheckStatusResponse{
 			StatusCode: 2,

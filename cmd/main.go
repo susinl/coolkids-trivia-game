@@ -17,6 +17,7 @@ import (
 	"github.com/gorilla/mux"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/rs/cors"
+	"github.com/susinl/coolkids-trivia-game/admin"
 	"github.com/susinl/coolkids-trivia-game/code"
 	"github.com/susinl/coolkids-trivia-game/database"
 	"github.com/susinl/coolkids-trivia-game/logz"
@@ -107,30 +108,35 @@ func main() {
 		winners.NewQueryWinnerListFn(db),
 	)).Methods(http.MethodGet)
 
-	mux.Handle("/check-status/{code}", middleware.NewMiddleware(logger).JsonMiddleware(middleware.NewMiddleware(logger).ValidateJWT(code.NewCheckStatusHandler(
+	mux.Handle("/check-status", middle.ValidateJWT(code.NewCheckStatusHandler(
 		logger,
 		code.NewQueryCheckStatusFn(db),
-	)))).Methods(http.MethodGet)
+	))).Methods(http.MethodGet)
 
 	mux.Handle("/generate-jwt", code.NewValidateCode(
 		logger,
 		code.NewQueryParticipantByCodeFn(db),
 	)).Methods(http.MethodPost)
 
-	mux.Handle("/start", question.NewStartQuestion(
+	mux.Handle("/start", middle.ValidateJWT(question.NewStartQuestion(
 		logger,
 		question.NewQueryParticipantByCodeFn(db),
 		question.NewQueryQuestionByStatusFn(db),
 		question.NewQueryCountTotalWinnerFn(db),
 		question.NewUpdateQuestionStatusAndParticipantInfoFn(db),
-	)).Methods(http.MethodPost)
+	))).Methods(http.MethodPost)
 
-	mux.Handle("/submit", question.NewSubmitAnswer(
+	mux.Handle("/submit", middle.ValidateJWT(question.NewSubmitAnswer(
 		logger,
 		question.NewQueryParticipantAndAnswerFn(db),
 		question.NewQueryCountTotalWinnerFn(db),
 		question.NewUpdateParticipantAnswerAndStatusFn(db),
-	)).Methods(http.MethodPost)
+	))).Methods(http.MethodPost)
+
+	mux.Handle("/fix", admin.NewFixQuestionHandler(
+		logger,
+		admin.NewUpdateQuestionStatusFn(db),
+	)).Methods(http.MethodGet)
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf("0.0.0.0:%s", viper.GetString("app.port")),
