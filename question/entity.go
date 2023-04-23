@@ -1,7 +1,7 @@
 package question
 
 type Participant struct {
-	GameCode       *string `json:"gameCode" db:"game_code"`
+	Code           *string `json:"code" db:"code"`
 	Name           *string `json:"name" db:"name"`
 	PhoneNumber    *string `json:"phoneNumber" db:"phone_number"`
 	QuestionId     *int    `json:"questionId" db:"question_id"`

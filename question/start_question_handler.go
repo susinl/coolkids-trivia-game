@@ -64,9 +64,7 @@ func (s *startQuestion) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		err := "game code's already used"
 		s.Logger.Error(err, zap.String("code", code))
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{
-			"error": err,
-		})
+		json.NewEncoder(w).Encode(StartQuestionResponse{IsAvailable: false})
 		return
 	}
 
@@ -132,7 +130,5 @@ func (s *startQuestion) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"data": &resp,
-	})
+	json.NewEncoder(w).Encode(&resp)
 }

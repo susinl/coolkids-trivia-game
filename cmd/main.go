@@ -17,8 +17,8 @@ import (
 	"github.com/gorilla/mux"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/rs/cors"
+	"github.com/susinl/coolkids-trivia-game/code"
 	"github.com/susinl/coolkids-trivia-game/database"
-	gameCode "github.com/susinl/coolkids-trivia-game/game_code"
 	"github.com/susinl/coolkids-trivia-game/logz"
 	"github.com/susinl/coolkids-trivia-game/middleware"
 	"github.com/susinl/coolkids-trivia-game/question"
@@ -92,19 +92,29 @@ func main() {
 	mux := route.PathPrefix(viper.GetString("app.context")).Subrouter()
 	mux.Use(middle.JsonMiddleware)
 
+	mux.Handle("/set-quota", winners.NewSetQuotaHandler(
+		logger,
+		winners.NewUpdateQuotaFn(db),
+	)).Methods(http.MethodPost)
+
+	mux.Handle("/get-quota", winners.NewGetQuotaHandler(
+		logger,
+		winners.NewQueryGetQuotaFn(db),
+	)).Methods(http.MethodGet)
+
 	mux.Handle("/get-winner", winners.NewgetWinnersHandler(
 		logger,
 		winners.NewQueryWinnerListFn(db),
 	)).Methods(http.MethodGet)
 
-	mux.Handle("/check-status/{code}", middleware.NewMiddleware(logger).JsonMiddleware(middleware.NewMiddleware(logger).ValidateJWT(gameCode.NewCheckStatusHandler(
+	mux.Handle("/check-status/{code}", middleware.NewMiddleware(logger).JsonMiddleware(middleware.NewMiddleware(logger).ValidateJWT(code.NewCheckStatusHandler(
 		logger,
-		gameCode.NewQueryCheckStatusFn(db),
+		code.NewQueryCheckStatusFn(db),
 	)))).Methods(http.MethodGet)
 
-	mux.Handle("/generate-jwt", gameCode.NewValidateGameCode(
+	mux.Handle("/generate-jwt", code.NewValidateCode(
 		logger,
-		gameCode.NewQueryParticipantByCodeFn(db),
+		code.NewQueryParticipantByCodeFn(db),
 	)).Methods(http.MethodPost)
 
 	mux.Handle("/start", question.NewStartQuestion(

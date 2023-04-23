@@ -5,8 +5,9 @@ type Winners struct {
 }
 
 type Winner struct {
-	FullName    *string `json:"name" db:"name"`
-	PhoneNumber *string `json:"phoneNumber" db:"phone_number"`
-	Code        *string `json:"gameCode" db:"game_code"`
-	Timestamp   *string `json:"registeredTime" db:"registered_time"`
+	Name         *string `json:"name" db:"name"`
+	PhoneNumber  *string `json:"phoneNumber" db:"phone_number"`
+	Code         *string `json:"code" db:"code"`
+	Timestamp    *string `json:"registeredTime" db:"registered_time"`
+	AnsweredTime *string `json:"answeredTime" db:"answered_time"`
 }

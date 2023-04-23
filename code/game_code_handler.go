@@ -1,4 +1,4 @@
-package gameCode
+package code
 
 import (
 	"encoding/json"
@@ -8,22 +8,22 @@ import (
 	"go.uber.org/zap"
 )
 
-type validateGameCode struct {
-	Logger                  *zap.Logger
-	QueryValidateGameCodeFn QueryValidateGameCodeFn
+type validateCode struct {
+	Logger              *zap.Logger
+	QueryValidateCodeFn QueryValidateCodeFn
 }
 
-func NewValidateGameCode(logger *zap.Logger, queryValidateGameCodeFn QueryValidateGameCodeFn) http.Handler {
-	return &validateGameCode{
-		Logger:                  logger,
-		QueryValidateGameCodeFn: queryValidateGameCodeFn,
+func NewValidateCode(logger *zap.Logger, queryValidateCodeFn QueryValidateCodeFn) http.Handler {
+	return &validateCode{
+		Logger:              logger,
+		QueryValidateCodeFn: queryValidateCodeFn,
 	}
 }
 
-func (s *validateGameCode) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (s *validateCode) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// code := "I1o9Wp"
 
-	var req ValidateGameCodeRequest
+	var req ValidateCodeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		s.Logger.Error(err.Error(), zap.String("code", req.Code))
 		w.WriteHeader(http.StatusBadRequest)
@@ -43,7 +43,7 @@ func (s *validateGameCode) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	count, err := s.QueryValidateGameCodeFn(r.Context(), req.Code)
+	count, err := s.QueryValidateCodeFn(r.Context(), req.Code)
 	if err != nil {
 		s.Logger.Error(err.Error(), zap.String("code", req.Code))
 		w.WriteHeader(http.StatusInternalServerError)
@@ -79,12 +79,12 @@ func (s *validateGameCode) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.Logger.Debug("validateGameCode",
+	s.Logger.Debug("validateCode",
 		zap.String("code", req.Code),
 		zap.String("token", token),
 	)
 
-	resp := ValidateGameCodeResponse{
+	resp := ValidateCodeResponse{
 		JwtToken: token,
 	}
 	w.WriteHeader(http.StatusOK)

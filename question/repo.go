@@ -35,16 +35,16 @@ func NewQueryParticipantByCodeFn(db *sql.DB) QueryParticipantByCodeFn {
 	return func(ctx context.Context, code string) (*Participant, error) {
 		var participant Participant
 		err := db.QueryRowContext(ctx, `
-			SELECT	game_code,
+			SELECT	code,
 					name,
 					phone_number,
 					question_id,
 					answer,
 					registered_time
 			FROM db.participant
-			WHERE game_code = ?
+			WHERE code = ?
 		;`, code).Scan(
-			&participant.GameCode,
+			&participant.Code,
 			&participant.Name,
 			&participant.PhoneNumber,
 			&participant.QuestionId,
@@ -146,7 +146,7 @@ func NewUpdateQuestionStatusAndParticipantInfoFn(db *sql.DB) UpdateQuestionStatu
 				phone_number = ?,
 				question_id = ?,
 				registered_time = ?
-			WHERE game_code = ?
+			WHERE code = ?
 		;`, name, phone, id, time.Now().Format(util.DateTimeFormat), code)
 		if err != nil {
 			if rollbackErr := tx.Rollback(); rollbackErr != nil {
@@ -191,7 +191,7 @@ func NewQueryParticipantAndAnswerFn(db *sql.DB) QueryParticipantAndAnswerFn {
 					x.registered_time
 			FROM db.participant x
 			LEFT JOIN db.question y ON x.question_id = y.id
-			WHERE x.game_code = ?
+			WHERE x.code = ?
 		;`, code).Scan(
 			&participantWAnswer.QuestionId,
 			&participantWAnswer.Answer,
@@ -246,9 +246,9 @@ func NewUpdateParticipantAnswerAndStatusFn(db *sql.DB) UpdateParticipantAnswerAn
 
 		resultP, err := tx.ExecContext(ctx, `
 			UPDATE db.participant
-			SET	answer = ?
-			WHERE game_code = ?
-		;`, answer, code)
+			SET	answer = ?, answered_time = ?
+			WHERE code = ?
+		;`, answer, time.Now().Format(util.DateTimeFormat), code)
 		if err != nil {
 			if rollbackErr := tx.Rollback(); rollbackErr != nil {
 				return errors.Wrap(err, rollbackErr.Error())

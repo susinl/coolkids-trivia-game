@@ -18,6 +18,8 @@ func NewMySQLConn() (*sql.DB, error) {
 		viper.GetString("mysql.database"),
 		viper.GetInt("mysql.timeout"),
 	)
+
+	// fmt.Println(connString)
 	db, err := sql.Open("mysql", connString)
 	if err != nil {
 		return nil, err

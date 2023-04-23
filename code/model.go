@@ -1,4 +1,4 @@
-package gameCode
+package code
 
 import (
 	"fmt"
@@ -7,22 +7,22 @@ import (
 	"github.com/susinl/coolkids-trivia-game/util"
 )
 
-type ValidateGameCodeRequest struct {
+type ValidateCodeRequest struct {
 	Code string `json:"code" example:"code"`
 }
 
-func (req *ValidateGameCodeRequest) validate() error {
+func (req *ValidateCodeRequest) validate() error {
 	if req.Code == "" {
 		return errors.Wrapf(errors.New(fmt.Sprintf("'code' must be REQUIRED field but the input is '%v'.", req.Code)), util.ValidateFieldError)
 	}
 	return nil
 }
 
-type ValidateGameCodeResponse struct {
+type ValidateCodeResponse struct {
 	JwtToken string `json:"jwtToken" example:"xxxxx.yyyyy.zzzzz"`
 }
 
-type ValidateGameCodeErrorResponse struct {
+type ValidateCodeErrorResponse struct {
 	Error string `json:"error" example:"code is invalid"`
 }
 
@@ -32,6 +32,11 @@ type CheckStatusResponse struct {
 }
 
 type CheckStatusData struct {
-	FullName string `json:"fullname" example:"John Doe"`
-	Code     string `json:"code" example:"123456"`
+	Name        string `json:"fullname" example:"John Doe"`
+	PhoneNumber string `json:"phoneNumber" example:"123456"`
+	Code        string `json:"code" example:"123456"`
+}
+
+type CheckActiveResponse struct {
+	ActiveCode int `json:"activeCode" example:"0"`
 }

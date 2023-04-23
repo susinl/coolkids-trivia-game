@@ -1,4 +1,4 @@
-package gameCode
+package code
 
 import (
 	"encoding/json"
@@ -52,9 +52,7 @@ func (h *checkStatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			StatusCode: 0,
 		}
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"data": &resp,
-		})
+		json.NewEncoder(w).Encode(&resp)
 		return
 	} else if *participantAnswerCheck.Answer != *participantAnswerCheck.CorrectAnswer {
 		// Lose
@@ -62,23 +60,20 @@ func (h *checkStatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			StatusCode: 2,
 		}
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"data": &resp,
-		})
+		json.NewEncoder(w).Encode(&resp)
 		return
 	} else {
 		// Win the game
 		resp = CheckStatusResponse{
 			StatusCode: 1,
 			Data: &CheckStatusData{
-				FullName: *participantAnswerCheck.Name,
-				Code:     *participantAnswerCheck.GameCode,
+				Name:        *participantAnswerCheck.Name,
+				PhoneNumber: *participantAnswerCheck.PhoneNumber,
+				Code:        *participantAnswerCheck.Code,
 			},
 		}
 	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"data": &resp,
-	})
+	json.NewEncoder(w).Encode(&resp)
 
 }

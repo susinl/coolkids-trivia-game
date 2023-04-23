@@ -13,13 +13,20 @@ CREATE TABLE `question` (
 )
 
 CREATE TABLE `participant` (
-  `game_code` varchar(255) NOT NULL,
+  `code` varchar(255) NOT NULL,
   `name` varchar(255),
   `phone_number` varchar(255),
   `question_id` int,
   `answer` int,
   `registered_time` timestamp,
-  PRIMARY KEY (`game_code`),
+  `answered_time` timestamp,
+  PRIMARY KEY (`code`),
   KEY `question_id` (`question_id`),
   CONSTRAINT `participant_ibfk_1` FOREIGN KEY (`question_id`) REFERENCES `question` (`id`)
 )
+
+CREATE TABLE game_quota (
+	quota int
+);
+
+INSERT INTO game_quota (quota) VALUES (10);

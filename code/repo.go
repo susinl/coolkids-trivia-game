@@ -1,25 +1,24 @@
-package gameCode
+package code
 
 import (
 	"context"
 	"database/sql"
-	"fmt"
 )
 
-type QueryValidateGameCodeFn func(ctx context.Context, code string) (int, error)
+type QueryValidateCodeFn func(ctx context.Context, code string) (int, error)
 
-func NewQueryParticipantByCodeFn(db *sql.DB) QueryValidateGameCodeFn {
+func NewQueryParticipantByCodeFn(db *sql.DB) QueryValidateCodeFn {
 	return func(ctx context.Context, code string) (int, error) {
 		var count int
 		err := db.QueryRowContext(ctx, `
 			SELECT COUNT(*)
 			FROM db.participant
-			WHERE game_code = ?
+			WHERE BINARY code = ?
 		;`, code).Scan(&count)
 		if err != nil {
 			return 0, err
 		}
-		fmt.Println(count)
+		// fmt.Println(count)
 		return count, nil
 	}
 }
@@ -30,21 +29,23 @@ func NewQueryCheckStatusFn(db *sql.DB) QueryCheckStatusFn {
 	return func(ctx context.Context, code string) (*ParticipantAnswer, error) {
 		var participantAnswer ParticipantAnswer
 		err := db.QueryRowContext(ctx, `
-			SELECT	p.game_code, 
+			SELECT	p.code, 
 					p.question_id,
 					p.name,
 					p.answer,
-					q.correct_answer
+					q.correct_answer,
+					p.phone_number
 			FROM db.participant p 
 			LEFT JOIN 	db.question q
 						ON p.question_id = q.id 
-			WHERE p.game_code = ?
+			WHERE p.code = ?
 		;`, code).Scan(
-			&participantAnswer.GameCode,
+			&participantAnswer.Code,
 			&participantAnswer.QuestionId,
 			&participantAnswer.Name,
 			&participantAnswer.Answer,
 			&participantAnswer.CorrectAnswer,
+			&participantAnswer.PhoneNumber,
 		)
 		switch {
 		case err == sql.ErrNoRows:
