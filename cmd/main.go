@@ -92,6 +92,10 @@ func main() {
 	mux := route.PathPrefix(viper.GetString("app.context")).Subrouter()
 	mux.Use(middle.JsonMiddleware)
 
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}).Methods(http.MethodGet)
+
 	mux.Handle("/set-quota", winners.NewSetQuotaHandler(
 		logger,
 		winners.NewUpdateQuotaFn(db),

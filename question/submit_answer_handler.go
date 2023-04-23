@@ -105,15 +105,16 @@ func (s *submitAnswer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	status := "ready"
-	if req.Answer == *participantWAnswer.CorrectAnswer {
-		status = "used"
-	}
-
 	byPass := totalWinner >= quota
 	answer := req.Answer
 	if byPass {
 		answer = 0
 	}
+
+	if !byPass && req.Answer == *participantWAnswer.CorrectAnswer {
+		status = "used"
+	}
+
 	if err := s.UpdateParticipantAnswerAndStatusFn(r.Context(), code, answer, *participantWAnswer.QuestionId, status); err != nil {
 		s.Logger.Error(err.Error(), zap.String("code", code))
 		w.WriteHeader(http.StatusInternalServerError)
