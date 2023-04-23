@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/susinl/coolkids-trivia-game/util"
+	"github.com/susinl/coolkids-trivia-game/winners"
 	"go.uber.org/zap"
 )
 
@@ -14,14 +15,16 @@ type submitAnswer struct {
 	Logger                             *zap.Logger
 	QueryParticipantAndAnswerFn        QueryParticipantAndAnswerFn
 	QueryCountTotalWinnerFn            QueryCountTotalWinnerFn
+	QueryGetQuotaFn                    winners.QueryGetQuotaFn
 	UpdateParticipantAnswerAndStatusFn UpdateParticipantAnswerAndStatusFn
 }
 
-func NewSubmitAnswer(logger *zap.Logger, queryParticipantAndAnswerFn QueryParticipantAndAnswerFn, queryCountTotalWinnerFn QueryCountTotalWinnerFn, updateParticipantAnswerAndStatusFn UpdateParticipantAnswerAndStatusFn) *submitAnswer {
+func NewSubmitAnswer(logger *zap.Logger, queryParticipantAndAnswerFn QueryParticipantAndAnswerFn, queryCountTotalWinnerFn QueryCountTotalWinnerFn, queryGetQuotaFn winners.QueryGetQuotaFn, updateParticipantAnswerAndStatusFn UpdateParticipantAnswerAndStatusFn) *submitAnswer {
 	return &submitAnswer{
 		Logger:                             logger,
 		QueryParticipantAndAnswerFn:        queryParticipantAndAnswerFn,
 		QueryCountTotalWinnerFn:            queryCountTotalWinnerFn,
+		QueryGetQuotaFn:                    queryGetQuotaFn,
 		UpdateParticipantAnswerAndStatusFn: updateParticipantAnswerAndStatusFn,
 	}
 }
@@ -91,12 +94,22 @@ func (s *submitAnswer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	quota, err := s.QueryGetQuotaFn(r.Context())
+	if err != nil {
+		s.Logger.Error(err.Error(), zap.String("code", code))
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+
 	status := "ready"
 	if req.Answer == *participantWAnswer.CorrectAnswer {
 		status = "used"
 	}
 
-	byPass := totalWinner >= viper.GetInt("question.quota")
+	byPass := totalWinner >= quota
 	answer := req.Answer
 	if byPass {
 		answer = 0

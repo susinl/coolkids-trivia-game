@@ -22,8 +22,6 @@ func NewSetQuotaHandler(logger *zap.Logger, updateQuotaFn UpdateQuotaFn) http.Ha
 }
 
 func (s *setQuotaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// code := "I1o9Wp"
-
 	var req UpdateQuotaRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
