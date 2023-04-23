@@ -249,9 +249,9 @@ func NewUpdateParticipantAnswerAndStatusFn(db *sql.DB) UpdateParticipantAnswerAn
 
 		resultP, err := tx.ExecContext(ctx, `
 			UPDATE db.participant
-			SET	answer = ?, answered_time = ?
+			SET	answer = ?
 			WHERE code = ?
-		;`, answer, time.Now().Format(util.DateTimeFormat), code)
+		;`, answer, code)
 		if err != nil {
 			if rollbackErr := tx.Rollback(); rollbackErr != nil {
 				return errors.Wrap(err, rollbackErr.Error())

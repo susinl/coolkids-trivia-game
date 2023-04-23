@@ -17,11 +17,11 @@ func NewQueryWinnerListFn(db *sql.DB) QueryWinnerListFn {
 					p.phone_number,
 					p.code,
 					p.registered_time,
-					p.answered_time
+					q.recent_time
 			FROM db.participant p
 			LEFT JOIN db.question q ON p.question_id = q.id
 			WHERE p.answer = q.correct_answer
-			ORDER BY p.answered_time ASC
+			ORDER BY q.recent_time ASC
 		;`)
 		if err != nil {
 			return nil, err
@@ -37,7 +37,7 @@ func NewQueryWinnerListFn(db *sql.DB) QueryWinnerListFn {
 				&winner.PhoneNumber,
 				&winner.Code,
 				&winner.Timestamp,
-				&winner.AnsweredTime,
+				&winner.RecentTime,
 			); err != nil {
 				return nil, err
 			}
