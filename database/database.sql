@@ -20,7 +20,6 @@ CREATE TABLE `participant` (
   `question_id` int,
   `answer` int,
   `registered_time` timestamp,
-  `answered_time` timestamp,
   PRIMARY KEY (`code`),
   KEY `question_id` (`question_id`),
   CONSTRAINT `participant_ibfk_1` FOREIGN KEY (`question_id`) REFERENCES `question` (`id`)

@@ -62,11 +62,12 @@ func (s *startQuestion) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var resp StartQuestionResponse
 	if participant.Name != nil {
 		err := "game code's already used"
 		s.Logger.Error(err, zap.String("code", code))
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(StartQuestionResponse{IsAvailable: false})
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(&resp)
 		return
 	}
 
@@ -126,7 +127,6 @@ func (s *startQuestion) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		zap.Bool("by pass", byPass),
 	)
 
-	var resp StartQuestionResponse
 	if !byPass {
 		resp = StartQuestionResponse{
 			IsAvailable: true,
