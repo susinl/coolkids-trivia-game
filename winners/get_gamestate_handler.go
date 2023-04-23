@@ -20,7 +20,6 @@ func NewGetQuotaHandler(logger *zap.Logger, queryGetQuotaFn QueryGetQuotaFn) htt
 }
 
 func (h *getQuotaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
 	quota, err := h.QueryGetQuotaFn(r.Context())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

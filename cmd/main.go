@@ -58,7 +58,6 @@ func initViper() {
 	viper.SetDefault("mysql.timeout", 100)
 
 	viper.SetDefault("question.timeout", "20s")
-	viper.SetDefault("question.quota", 10)
 
 	viper.SetDefault("jwt.secret", "CoolKidsSecret")
 
@@ -123,6 +122,7 @@ func main() {
 		question.NewQueryParticipantByCodeFn(db),
 		question.NewQueryQuestionByStatusFn(db),
 		question.NewQueryCountTotalWinnerFn(db),
+		winners.NewQueryGetQuotaFn(db),
 		question.NewUpdateQuestionStatusAndParticipantInfoFn(db),
 	))).Methods(http.MethodPost)
 
@@ -130,6 +130,7 @@ func main() {
 		logger,
 		question.NewQueryParticipantAndAnswerFn(db),
 		question.NewQueryCountTotalWinnerFn(db),
+		winners.NewQueryGetQuotaFn(db),
 		question.NewUpdateParticipantAnswerAndStatusFn(db),
 	))).Methods(http.MethodPost)
 

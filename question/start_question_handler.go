@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/spf13/viper"
 	"github.com/susinl/coolkids-trivia-game/util"
+	"github.com/susinl/coolkids-trivia-game/winners"
 	"go.uber.org/zap"
 )
 
@@ -14,15 +14,17 @@ type startQuestion struct {
 	QueryParticipantByCodeFn                 QueryParticipantByCodeFn
 	QueryQuestionByStatusFn                  QueryQuestionByStatusFn
 	QueryCountTotalWinnerFn                  QueryCountTotalWinnerFn
+	QueryGetQuotaFn                          winners.QueryGetQuotaFn
 	UpdateQuestionStatusAndParticipantInfoFn UpdateQuestionStatusAndParticipantInfoFn
 }
 
-func NewStartQuestion(logger *zap.Logger, queryParticipantByCodeFn QueryParticipantByCodeFn, queryQuestionByStatusFn QueryQuestionByStatusFn, queryCountTotalWinnerFn QueryCountTotalWinnerFn, updateQuestionStatusAndParticipantInfoFn UpdateQuestionStatusAndParticipantInfoFn) http.Handler {
+func NewStartQuestion(logger *zap.Logger, queryParticipantByCodeFn QueryParticipantByCodeFn, queryQuestionByStatusFn QueryQuestionByStatusFn, queryCountTotalWinnerFn QueryCountTotalWinnerFn, queryGetQuotaFn winners.QueryGetQuotaFn, updateQuestionStatusAndParticipantInfoFn UpdateQuestionStatusAndParticipantInfoFn) http.Handler {
 	return &startQuestion{
 		Logger:                                   logger,
 		QueryParticipantByCodeFn:                 queryParticipantByCodeFn,
 		QueryQuestionByStatusFn:                  queryQuestionByStatusFn,
 		QueryCountTotalWinnerFn:                  queryCountTotalWinnerFn,
+		QueryGetQuotaFn:                          queryGetQuotaFn,
 		UpdateQuestionStatusAndParticipantInfoFn: updateQuestionStatusAndParticipantInfoFn,
 	}
 }
@@ -98,7 +100,17 @@ func (s *startQuestion) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	byPass := totalWinner >= viper.GetInt("question.quota")
+	quota, err := s.QueryGetQuotaFn(r.Context())
+	if err != nil {
+		s.Logger.Error(err.Error(), zap.String("code", code))
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	byPass := totalWinner >= quota
 	if err := s.UpdateQuestionStatusAndParticipantInfoFn(r.Context(), code, req.Name, req.PhoneNumber, *question.Id, byPass); err != nil {
 		s.Logger.Error(err.Error(), zap.String("code", code))
 		w.WriteHeader(http.StatusInternalServerError)

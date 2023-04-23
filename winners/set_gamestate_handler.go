@@ -2,7 +2,6 @@ package winners
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"go.uber.org/zap"
@@ -23,8 +22,6 @@ func NewSetQuotaHandler(logger *zap.Logger, updateQuotaFn UpdateQuotaFn) http.Ha
 }
 
 func (s *setQuotaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// code := "I1o9Wp"
-
 	var req UpdateQuotaRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -34,8 +31,6 @@ func (s *setQuotaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
-
-	fmt.Println(req.NewQuota)
 
 	err := s.UpdateQuotaFn(r.Context(), req.NewQuota)
 	if err != nil {
