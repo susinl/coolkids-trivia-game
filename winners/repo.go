@@ -3,7 +3,6 @@ package winners
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	"github.com/pkg/errors"
 )
@@ -77,7 +76,7 @@ func NewUpdateQuotaFn(db *sql.DB) UpdateQuotaFn {
 			return err
 		}
 
-		fmt.Println(newQuota)
+		// fmt.Println(newQuota)
 
 		resultQ, err := tx.ExecContext(ctx, `
 			UPDATE db.game_quota
