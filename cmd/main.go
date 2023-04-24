@@ -99,6 +99,7 @@ func main() {
 	mux.Handle("/set-quota", winners.NewSetQuotaHandler(
 		logger,
 		winners.NewUpdateQuotaFn(db),
+		admin.NewUpdateQuestionStatusFn(db),
 	)).Methods(http.MethodPost)
 
 	mux.Handle("/get-quota", winners.NewGetQuotaHandler(

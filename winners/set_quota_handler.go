@@ -2,22 +2,26 @@ package winners
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
+	"github.com/susinl/coolkids-trivia-game/admin"
 	"go.uber.org/zap"
 )
 
 type setQuotaHandler struct {
-	Logger        *zap.Logger
-	UpdateQuotaFn UpdateQuotaFn
+	Logger                 *zap.Logger
+	UpdateQuotaFn          UpdateQuotaFn
+	UpdateQuestionStatusFn admin.UpdateQuestionStatusFn
 }
 
 type EmptyResponse struct{}
 
-func NewSetQuotaHandler(logger *zap.Logger, updateQuotaFn UpdateQuotaFn) http.Handler {
+func NewSetQuotaHandler(logger *zap.Logger, updateQuotaFn UpdateQuotaFn, updateQuestionStatusFn admin.UpdateQuestionStatusFn) http.Handler {
 	return &setQuotaHandler{
-		Logger:        logger,
-		UpdateQuotaFn: updateQuotaFn,
+		Logger:                 logger,
+		UpdateQuotaFn:          updateQuotaFn,
+		UpdateQuestionStatusFn: updateQuestionStatusFn,
 	}
 }
 
@@ -34,14 +38,25 @@ func (s *setQuotaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// fmt.Println(req.NewQuota)
 
-	err := s.UpdateQuotaFn(r.Context(), req.NewQuota)
-	if err != nil {
+	if err := s.UpdateQuotaFn(r.Context(), req.NewQuota); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{
 			"error": err.Error(),
 		})
 		return
 	}
+
+	affects, err := s.UpdateQuestionStatusFn(r.Context())
+	if err != nil {
+		s.Logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	s.Logger.Debug(fmt.Sprintf("row affects: %d", affects))
 
 	resp := EmptyResponse{}
 	w.WriteHeader(http.StatusOK)
