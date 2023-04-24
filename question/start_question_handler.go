@@ -3,6 +3,7 @@ package question
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/susinl/coolkids-trivia-game/util"
 	"github.com/susinl/coolkids-trivia-game/winners"
@@ -113,12 +114,21 @@ func (s *startQuestion) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	byPass := totalWinner >= quota
 	if err := s.UpdateQuestionStatusAndParticipantInfoFn(r.Context(), code, req.Name, req.PhoneNumber, *question.Id, byPass); err != nil {
-		s.Logger.Error(err.Error(), zap.String("code", code))
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{
-			"error": err.Error(),
-		})
-		return
+		if strings.Contains(err.Error(), "1062") {
+			s.Logger.Error(err.Error(), zap.String("code", code))
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{
+				"error": err.Error(),
+			})
+			return
+		} else {
+			s.Logger.Error(err.Error(), zap.String("code", code))
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{
+				"error": err.Error(),
+			})
+			return
+		}
 	}
 
 	s.Logger.Debug("participant",

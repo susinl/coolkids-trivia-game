@@ -144,7 +144,7 @@ func NewUpdateQuestionStatusAndParticipantInfoFn(db *sql.DB) UpdateQuestionStatu
 
 		resultP, err := tx.ExecContext(ctx, `
 			UPDATE db.participant
-			SET	name = ?,
+			SET	name = LOWER(?),
 				phone_number = ?,
 				question_id = ?,
 				registered_time = ?

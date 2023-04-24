@@ -2,6 +2,7 @@ package question
 
 import (
 	"fmt"
+	"strings"
 	"unicode/utf8"
 
 	"github.com/pkg/errors"
@@ -14,11 +15,20 @@ type StartQuestionRequest struct {
 }
 
 func (req *StartQuestionRequest) validate() error {
+	req.Name = strings.TrimSpace(req.Name)
+	req.PhoneNumber = strings.TrimSpace(req.PhoneNumber)
+
+	if !util.IsLetter(req.Name) {
+		return errors.Wrapf(errors.New(fmt.Sprintf("'name' must be letter only.")), util.ValidateFieldError)
+	}
 	if utf8.RuneCountInString(req.Name) == 0 {
 		return errors.Wrapf(errors.New(fmt.Sprintf("'name' must be REQUIRED field but the input is '%v'.", req.Name)), util.ValidateFieldError)
 	}
 	if utf8.RuneCountInString(req.PhoneNumber) == 0 {
 		return errors.Wrapf(errors.New(fmt.Sprintf("'phoneNumber' must be REQUIRED field but the input is '%v'.", req.PhoneNumber)), util.ValidateFieldError)
+	}
+	if !util.IsPhone(req.PhoneNumber) {
+		return errors.Wrapf(errors.New(fmt.Sprintf("'phoneNumber' must be format.")), util.ValidateFieldError)
 	}
 	return nil
 }
