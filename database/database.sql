@@ -15,12 +15,14 @@ CREATE TABLE `question` (
 
 CREATE TABLE `participant` (
   `code` varchar(255) NOT NULL,
-  `name` varchar(255),
-  `phone_number` varchar(255),
-  `question_id` int,
-  `answer` int,
-  `registered_time` timestamp,
+  `name` varchar(255) DEFAULT NULL,
+  `phone_number` varchar(255) DEFAULT NULL,
+  `question_id` int DEFAULT NULL,
+  `answer` int DEFAULT NULL,
+  `registered_time` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`code`),
+  UNIQUE KEY `name` (`name`),
+  UNIQUE KEY `phone_number` (`phone_number`),
   KEY `question_id` (`question_id`),
   CONSTRAINT `participant_ibfk_1` FOREIGN KEY (`question_id`) REFERENCES `question` (`id`)
 )
