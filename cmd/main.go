@@ -89,7 +89,7 @@ func main() {
 	cfgCors := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},                                               // All origins
 		AllowedMethods:   []string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"}, // Allowing only get, just an example
-		AllowedHeaders:   []string{"Content-Type", "Origin", "Authorization", "Accept"},
+		AllowedHeaders:   []string{"Content-Type", "Origin", "Authorization", "Accept", "ReCaptcha-Token"},
 		AllowCredentials: true,
 	})
 
