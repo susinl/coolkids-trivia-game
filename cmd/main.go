@@ -51,7 +51,7 @@ func initViper() {
 	viper.SetDefault("log.level", "debug")
 	viper.SetDefault("log.env", "dev")
 
-	viper.SetDefault("mysql.host", "139.59.115.212")
+	viper.SetDefault("mysql.host", "localhost")
 	viper.SetDefault("mysql.port", "3306")
 	viper.SetDefault("mysql.username", "sa")
 	viper.SetDefault("mysql.database", "db")
