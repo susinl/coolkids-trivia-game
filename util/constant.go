@@ -7,10 +7,14 @@ const (
 const (
 	ContentType               string = "Content-Type"
 	ApplicationJSON           string = "application/json"
+	ApplicationUrlEncoded     string = "application/x-www-form-urlencoded"
 	AccessControl             string = "Access-Control-Allow-Origin"
 	XRequestID                string = "X-Request-ID"
 	BasicAuthenticationHeader string = "WWW-Authenticate"
+	ReCaptchaTokenHeader      string = "ReCaptcha-Token"
 	TokenCtxKey               string = "token"
+	ReCaptchaSecretTag        string = "secret"
+	ReCaptchaTokenTag         string = "response"
 )
 
 const (

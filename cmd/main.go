@@ -51,7 +51,7 @@ func initViper() {
 	viper.SetDefault("log.level", "debug")
 	viper.SetDefault("log.env", "dev")
 
-	viper.SetDefault("mysql.host", "localhost")
+	viper.SetDefault("mysql.host", "139.59.115.212")
 	viper.SetDefault("mysql.port", "3306")
 	viper.SetDefault("mysql.username", "sa")
 	viper.SetDefault("mysql.database", "db")
@@ -60,6 +60,10 @@ func initViper() {
 	viper.SetDefault("question.timeout", "20s")
 
 	viper.SetDefault("jwt.secret", "CoolKidsSecret")
+
+	viper.SetDefault("recaptcha.minimum-score", "0.7")
+
+	viper.SetDefault("client.google-api.recaptchav3", "https://www.google.com/recaptcha/api/siteverify")
 
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
@@ -77,6 +81,8 @@ func main() {
 		logger.Error(err.Error())
 	}
 	defer db.Close()
+
+	httpClient := &http.Client{}
 
 	route := mux.NewRouter()
 
@@ -119,6 +125,7 @@ func main() {
 
 	mux.Handle("/generate-jwt", code.NewValidateCode(
 		logger,
+		code.NewCheckReCaptchaClientFn(httpClient),
 		code.NewQueryParticipantByCodeFn(db),
 	)).Methods(http.MethodPost)
 

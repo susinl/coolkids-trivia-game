@@ -7,6 +7,15 @@ import (
 	"github.com/susinl/coolkids-trivia-game/util"
 )
 
+type VerifyUserGoogleApiResponse struct {
+	Success     bool     `json:"success" example:"true"`
+	Score       float64  `json:"score" example:"1.0"`
+	Action      string   `json:"action" example:"submit_form"`
+	ChallengeTs string   `json:"challenge_ts" example:"2022-04-12T07:12:13Z"`
+	Hostname    string   `json:"hostname" example:"localhost"`
+	ErrorCodes  []string `json:"error-codes" example:"['timeout-or-duplicate']"`
+}
+
 type ValidateCodeRequest struct {
 	Code string `json:"code" example:"code"`
 }

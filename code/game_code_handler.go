@@ -2,27 +2,31 @@ package code
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
+	"strings"
 
+	"github.com/spf13/viper"
 	token "github.com/susinl/coolkids-trivia-game/jwt"
+	"github.com/susinl/coolkids-trivia-game/util"
 	"go.uber.org/zap"
 )
 
 type validateCode struct {
-	Logger              *zap.Logger
-	QueryValidateCodeFn QueryValidateCodeFn
+	Logger                 *zap.Logger
+	CheckReCaptchaClientFn CheckReCaptchaClientFn
+	QueryValidateCodeFn    QueryValidateCodeFn
 }
 
-func NewValidateCode(logger *zap.Logger, queryValidateCodeFn QueryValidateCodeFn) http.Handler {
+func NewValidateCode(logger *zap.Logger, checkReCaptchaClientFn CheckReCaptchaClientFn, queryValidateCodeFn QueryValidateCodeFn) http.Handler {
 	return &validateCode{
-		Logger:              logger,
-		QueryValidateCodeFn: queryValidateCodeFn,
+		Logger:                 logger,
+		CheckReCaptchaClientFn: checkReCaptchaClientFn,
+		QueryValidateCodeFn:    queryValidateCodeFn,
 	}
 }
 
 func (s *validateCode) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// code := "I1o9Wp"
-
 	var req ValidateCodeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		s.Logger.Error(err.Error(), zap.String("code", req.Code))
@@ -35,6 +39,45 @@ func (s *validateCode) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	if err := req.validate(); err != nil {
+		s.Logger.Error(err.Error(), zap.String("code", req.Code))
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	reCaptcha := r.Header.Get(util.ReCaptchaTokenHeader)
+	if reCaptcha == "" {
+		err := errors.New("no reCaptcha token")
+		s.Logger.Error(err.Error(), zap.String("code", req.Code))
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+	clientResp, err := s.CheckReCaptchaClientFn(reCaptcha)
+	if err != nil {
+		s.Logger.Error(err.Error(), zap.String("code", req.Code))
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+	if clientResp.ErrorCodes != nil {
+		err := errors.New(strings.Join(clientResp.ErrorCodes, ","))
+		s.Logger.Error(err.Error(), zap.String("code", req.Code))
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	if !clientResp.Success || clientResp.Score < viper.GetFloat64("recaptcha.minimum-score") {
+		err := errors.New("you're robot.")
 		s.Logger.Error(err.Error(), zap.String("code", req.Code))
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{
